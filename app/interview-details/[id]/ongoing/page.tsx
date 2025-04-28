@@ -82,7 +82,7 @@ export default function Ongoing({ params }: InterviewPageProps) {
       if (!interviewId || !user?.uid) return;
       try {
         setLoading(true);
-        const docRef = doc(db, `users/${user.uid}/interviews/${interviewId}`);
+        const docRef = doc(db, `/interviews/${interviewId}`);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -154,7 +154,7 @@ export default function Ongoing({ params }: InterviewPageProps) {
       await generateFeedBack(
         data,
         interviewId,
-        user?.uid,
+        // user?.uid,
         fullName,
         contact,
         email,

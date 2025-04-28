@@ -21,31 +21,16 @@ export default function DashboardPage() {
   const [allInterviews, setAllInterviews] = useState([]); // Assuming you want to fetch all interviews
   const [error, setError] = useState<string | null>(null); // Error state
 
-  // useEffect(() => {
-  //   debugger;
-  //   if (loading == false && !user?.uid) {
-  //     console.log(loading, user, "user is null and loading is false");
-  //     router.push("/login"); // redirect only if loading is complete and user is still null
-  //   }
-  // }, [user, loading]);
-
-  // if (!user) return null; // optional: show spinner/loading
-
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push("/login");
-  };
-
   useEffect(() => {
     setLoading(true);
     const fetchAllInterviews = async () => {
       try {
-        const collectionRef = collection(db, `users/${user.uid}/interviews`);
+        const collectionRef = collection(db, `interviews`);
         const querySnapshot = await getDocs(collectionRef);
 
         const interviews: any[] = [];
         querySnapshot.forEach((doc) => {
-          console.log(doc);
+          if(doc?.data()?.userId != user?.uid) return;
           interviews.push({ id: doc.id, ...doc.data() });
         });
 
@@ -87,7 +72,7 @@ export default function DashboardPage() {
                 Create Voice Interview
               </h3>
               <Button
-                variant="default"
+                // variant="default"
                 className="bg-indigo-500 hover:bg-indigo-600 w-full"
                 onPress = {() => {
                   router.push('/create-interview')
@@ -103,7 +88,7 @@ export default function DashboardPage() {
               <h3 className="text-xl font-semibold mb-4">
                 Create Coding Interview
               </h3>
-              <Button variant="outline" className="w-full" disabled>
+              <Button variant="bordered" className="w-full" disabled>
                 Coming Soon
               </Button>
             </div>
@@ -112,7 +97,7 @@ export default function DashboardPage() {
             <div className="border border-[#575757] rounded-xl p-6 flex flex-col items-center bg-[#1a1a1a] opacity-70 cursor-not-allowed">
               <FaListAlt className="text-4xl text-indigo-400 mb-4" />
               <h3 className="text-xl font-semibold mb-4">Create MCQ Interview</h3>
-              <Button variant="outline" className="w-full" disabled>
+              <Button variant="bordered" className="w-full" disabled>
                 Coming Soon
               </Button>
             </div>

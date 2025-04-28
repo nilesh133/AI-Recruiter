@@ -70,7 +70,7 @@ console.log("attendees", attendees);
           // setLoading(true);
           const colRef = collection(
             db,
-            `users/${user.uid}/interviews/${interviewId}/attendees`
+            `/interviews/${interviewId}/attendees`
           );
           const querySnapshot = await getDocs(colRef);
   
@@ -79,7 +79,7 @@ console.log("attendees", attendees);
             attendeesData.push({id: doc.id ,...doc.data()} as Attendees);
             console.log(doc.id, " => ", doc.data());
           });
-          const docRef = doc(db, `users/${user.uid}/interviews/${interviewId}`);
+          const docRef = doc(db, `/interviews/${interviewId}`);
           const docSnap = await getDoc(docRef);
   
           if (docSnap.exists()) {

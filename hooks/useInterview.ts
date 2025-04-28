@@ -13,9 +13,9 @@ export const useInterview = () => {
     onSuccess(res);
   }
 
-  const generateFeedBack = async (data: any, interview_id: string, user_uid: string, fullName: string, contact: string, email: string, onSuccess: (res: any) => void) => {
+  const generateFeedBack = async (data: any, interview_id: string, fullName: string, contact: string, email: string, onSuccess: (res: any) => void) => {
     debugger;
-    const res = await generateFeedBackHandler(data, interview_id, user_uid, fullName, contact, email);
+    const res = await generateFeedBackHandler(data, interview_id, fullName, contact, email);
     onSuccess(res);
   }
 

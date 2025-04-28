@@ -10,18 +10,14 @@ export const addNewInterview = async (
 ) => {
   if (!userId) throw new Error("User ID is required");
 
-  const userRef = doc(db, "users", userId);
-  const interviewRef = collection(userRef, "interviews");
+  const interviewRef = collection(db, "interviews");
 
   const newInterview = {
     ...interviewDetails,
     questions,
     userId,
     createdAt: Timestamp.now(),
-    // interview_id: interviewRef
   };
-
-  console.log(interviewRef, "interviewRef");
 
   const docRef = await addDoc(interviewRef, newInterview);
 
@@ -31,27 +27,28 @@ export const addNewInterview = async (
   };
 };
 
+
 export const generateFeedBackHandler = async (
   data: any,
   interviewId: string,
-  userId: string,
+  // userId: string,
   fullName: string,
   contact: string,
   email: string
 ) => {
-  if (!userId) throw new Error("User ID is required");
+  // if (!userId) throw new Error("User ID is required");
 
   const details = {
     data,
     interviewId,
-    userId,
+    // userId,
     fullName,
     contact,
     email,
     createdAt: Timestamp.now(),
   };
 
-  const userCollectionRef = collection(db, `users/${userId}/interviews/${interviewId}/attendees`);
+  const userCollectionRef = collection(db, `/interviews/${interviewId}/attendees`);
 
   const userRef = await addDoc(userCollectionRef, details);
 

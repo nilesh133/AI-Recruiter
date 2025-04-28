@@ -8,27 +8,33 @@ import { FaSignInAlt, FaUserPlus, FaSignOutAlt } from "react-icons/fa";
 import Logo from "../public/aicruit_logo.png";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
+import { signOut } from "firebase/auth";
+import { auth } from "@/lib/firebase";
 
 const Navbar = () => {
   const { user, loading } = useAuthContext(); // notice added loading
   const router = useRouter();
   const pathname = usePathname();
-  console.log("pathname", pathname);
-  const hideNavbarRoutes = ["/signup", "/login", "/ongoing", "/interview-details"];
-  const shouldHideNavbar = hideNavbarRoutes.some((path) => pathname.startsWith(path));
+  const hideNavbarRoutes = [
+    "/signup",
+    "/login",
+    "/ongoing",
+    "/interview-details",
+  ];
+  const shouldHideNavbar = hideNavbarRoutes.some((path) =>
+    pathname.startsWith(path)
+  );
 
   if (loading) {
-    // 👇 optional: You can show an empty navbar or a spinner while loading
     return (
       <nav className="flex items-center justify-between px-8 py-4 shadow-md border-b border-[#575757]">
         <Image src={Logo} alt="Logo" className="w-[4rem] h-11 object-cover" />
-        {/* <div className="text-2xl font-bold text-indigo-600">Loading...</div> */}
       </nav>
     );
   }
 
-  if(shouldHideNavbar) {
-    return null; // Don't render the navbar if on the specified routes
+  if (shouldHideNavbar) {
+    return null;
   }
 
   return (
@@ -60,6 +66,10 @@ const Navbar = () => {
           <Button
             variant="bordered"
             className="flex items-center gap-2 bg-red-500 text-white"
+            onPress={async () => {
+              await signOut(auth);
+              router.push("/login");
+            }}
           >
             <FaSignOutAlt className="text-lg" />
             Log Out

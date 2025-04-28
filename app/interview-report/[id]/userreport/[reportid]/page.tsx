@@ -85,7 +85,7 @@ export default function UserInterviewReport({ params }: InterviewPageProps) {
         debugger;
         const docRef = doc(
           db,
-          `users/${userData.uid}/interviews/${interviewId}/attendees/${reportId}`
+          `/interviews/${interviewId}/attendees/${reportId}`
         );
         const docSnap = await getDoc(docRef);
 
@@ -227,6 +227,20 @@ export default function UserInterviewReport({ params }: InterviewPageProps) {
         </CardBody>
       </Card>
 
+    
+
+      <Card className="bg-zinc-800 text-white">
+        <CardHeader className="text-xl font-semibold border-b border-zinc-700">
+          Performance Summary
+        </CardHeader>
+        <CardBody>
+          <p className="text-gray-300">
+            {userReport?.overall_feedback ||
+              "No performance summary available."}
+          </p>
+        </CardBody>
+      </Card>
+
       <Card className="bg-zinc-800 text-white">
         <CardHeader className="text-xl font-semibold border-b border-zinc-700">
           Final Verdict
@@ -246,18 +260,6 @@ export default function UserInterviewReport({ params }: InterviewPageProps) {
             </span>
             <p className="text-gray-300">{userReport?.overall_feedback}</p>
           </div>
-        </CardBody>
-      </Card>
-
-      <Card className="bg-zinc-800 text-white">
-        <CardHeader className="text-xl font-semibold border-b border-zinc-700">
-          Performance Summary
-        </CardHeader>
-        <CardBody>
-          <p className="text-gray-300">
-            {userReport?.overall_feedback ||
-              "No performance summary available."}
-          </p>
         </CardBody>
       </Card>
     </div>

@@ -34,13 +34,7 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
 
       try {
         setLoading(true);
-        const colRef = collection(db, `users/${user.uid}/interviews`);
-        const querySnapshot = await getDocs(colRef);
-        
-        querySnapshot.forEach((doc) => {
-          console.log(doc.id, " => ", doc.data());
-        });
-        const docRef = doc(db, `users/${user.uid}/interviews/${interviewId}`);
+        const docRef = doc(db, `/interviews/${interviewId}`);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
@@ -101,7 +95,7 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
   }
 
   return (
-    <div className="max-w-2xl mx-auto p-6 space-y-6">
+    <div className="max-w-2xl min-w-[50%] mx-auto p-6 space-y-6">
       <h1 className="text-3xl font-bold text-white">{interview.profile} Interview</h1>
 
       <div className="grid grid-cols-3 gap-4 text-gray-700">
