@@ -1,26 +1,45 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: var(--font-poppins); /* or var(--font-geist-sans) */
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+}
+
+@layer components {
+  .icons {
+    @apply text-2xl;
+  }
+
+  .field_container {
+    @apply flex flex-col gap-2;
+  }
+
+  .field_container_label {
+    @apply text-gray-100 text-sm font-medium; /* corrected white-500 to gray-500 */
+  }
+
+  .field_container_input {
+    @apply flex gap-2 text-gray-100 py-2 px-2 rounded-lg p-1 bg-[#111729]; /* corrected white-900 to gray-900 */
+  }
+
+  .field_container_input input {
+    @apply flex-1 bg-transparent text-[15px] text-gray-100 border-none outline-none; /* corrected white-900 to gray-900 */
+  }
+
+  .field_container_icon{
+    @apply text-gray-100 text-[20px];
+  }
+
+  .spinner i {
+    @apply bg-white
+  }
+
+  .field_dropdown button {
+    @apply px-0 py-1 text-gray-100 bg-transparent h-auto min-h-0 hover:outline-none hover:bg-transparent focus:outline-none focus:ring-0 focus:shadow-none
+  }
 }
