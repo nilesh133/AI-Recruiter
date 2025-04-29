@@ -42,7 +42,7 @@ const agent = {
   },
 };
 
-export default function OngoingSetup({interviewId}: { interviewId: any }) {
+export default function OngoingSetup({interviewId}: { interviewId: string }) {
   const router = useRouter();
   const { user } = useAuthContext();
   const { generateFeedBack } = useInterview();

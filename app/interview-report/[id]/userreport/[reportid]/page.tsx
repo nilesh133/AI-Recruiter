@@ -2,7 +2,7 @@ import UserInterviewReport from "./UserInterviewReport";
 
 
 interface PageProps {
-  params: { id: any, reportid: any };
+  params: { id: string, reportid: string };
 }
 
 export default async function InterviewReportPage({ params }: PageProps) {

@@ -20,7 +20,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import moment from "moment";
 
 interface InterviewReportProps {
-  interviewId: any;
+  interviewId: string;
 }
 
 export default function InterviewReport({ interviewId }: InterviewReportProps) {

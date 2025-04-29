@@ -1,7 +1,7 @@
 import OngoingSetup from "./OngoingSetup";
 
 interface PageProps {
-  params: { id: any };
+  params: { id: string };
 }
 
 const Ongoing = async ({ params }: PageProps) => {

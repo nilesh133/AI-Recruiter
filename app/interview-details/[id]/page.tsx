@@ -1,7 +1,7 @@
 import InterviewSetup from "./InterviewSetup";
 
 interface Props {
-  params: { id: any };
+  params: { id: string };
 }
 
 const InterviewSetupPage = async ({ params }: Props) => {

@@ -1,6 +1,6 @@
 import InterviewReport from "./InterviewReport";
 interface PageProps {
-  params: { id: any};
+  params: { id: string};
 }
 
 export default async function InterviewReportPage({ params }: PageProps) {
