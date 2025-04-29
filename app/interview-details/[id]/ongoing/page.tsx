@@ -12,10 +12,6 @@ import Vapi from "@vapi-ai/web";
 import { useInterview } from "@/hooks/useInterview";
 import { useToast } from "@/hooks/useToast";
 
-// interface InterviewPageProps {
-//   params: { id: string };
-// }
-
 const agent = {
   name: "Interviewer",
   firstMessage:
