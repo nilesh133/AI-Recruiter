@@ -29,7 +29,7 @@ export default function DashboardPage() {
         const collectionRef = collection(db, `interviews`);
         const querySnapshot = await getDocs(collectionRef);
 
-        const interviews: InterviewDetails[] = [];
+        const interviews: any[] = [];
         querySnapshot.forEach((doc) => {
           if(doc?.data()?.userId != user?.uid) return;
           interviews.push({ id: doc.id, ...doc.data() });
