@@ -1,5 +1,5 @@
 export interface InterviewDetails {
-    id: string;
+    id: any;
     profile: string;
     duration: string;
     description: string;
