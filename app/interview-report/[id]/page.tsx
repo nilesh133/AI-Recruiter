@@ -1,9 +1,6 @@
 import InterviewReport from "./InterviewReport";
 
-interface PageProps {
-  params: { id: string };
-}
-
-export default function InterviewReportPage({ params }: PageProps) {
-  return <InterviewReport interviewId={params.id} />;
+export default async function InterviewReportPage({ params }) {
+  const { id } = await params
+  return <InterviewReport interviewId={id} />;
 }
