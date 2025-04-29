@@ -2,7 +2,7 @@ import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "fire
 import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebase";
 import { useState } from "react";
-import {Question, InterviewDetails} from "@/types/user";
+import {Question, InterviewDetails} from "@/types/interview";
 import { addNewInterview, generateFeedBackHandler } from "@/services/interviewService";
 
 export const useInterview = () => {

@@ -6,20 +6,21 @@ import { useEffect, useState } from "react";
 import { signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
-import { Button } from "@heroui/react"; // HeroUI Button
+import { Button } from "@heroui/react";
 import { FaMicrophoneAlt, FaCode, FaListAlt } from "react-icons/fa";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { FaTools, FaBrain, FaComments, FaBolt } from "react-icons/fa"; // Icons
 import { useToast } from "@/hooks/useToast";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { InterviewDetails } from "@/types/interview";
 
 export default function DashboardPage() {
   const { user } = useAuthContext();
   const { addToastHandler } = useToast();
   const router = useRouter();
-  const [loading, setLoading] = useState<boolean | null>(null); // Assuming useAuth returns loading state
-  const [allInterviews, setAllInterviews] = useState([]); // Assuming you want to fetch all interviews
-  const [error, setError] = useState<string | null>(null); // Error state
+  const [loading, setLoading] = useState<boolean | null>(null);
+  const [allInterviews, setAllInterviews] = useState<InterviewDetails[]>([]);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -28,7 +29,7 @@ export default function DashboardPage() {
         const collectionRef = collection(db, `interviews`);
         const querySnapshot = await getDocs(collectionRef);
 
-        const interviews: any[] = [];
+        const interviews: InterviewDetails[] = [];
         querySnapshot.forEach((doc) => {
           if(doc?.data()?.userId != user?.uid) return;
           interviews.push({ id: doc.id, ...doc.data() });
@@ -54,7 +55,7 @@ export default function DashboardPage() {
     fetchAllInterviews();
   }, [user?.uid]);
 
-  console.log(allInterviews, user?.uid, "all interviews");
+  console.log(allInterviews, "All Interviews");
 
   return (
     <ProtectedRoute>
@@ -199,8 +200,20 @@ export default function DashboardPage() {
                       </td>
                       <td className="py-3 px-6 border-b border-[#575757]">
                         <Button
-                          onPress={() =>
-                            router.push(`/interview-report/${interview.id}`)
+                          onPress={() =>{
+                            if(interview?.id) {
+                              router.push(`/interview-report/${interview?.id}`)
+                            } else {
+                              addToastHandler({
+                                title: "Error",
+                                description: "No attendees found for this interview.",
+                                color: "error",
+                                timeout: 3000,
+                                variant: "error",
+                                shouldShowTimeoutProgress: true,
+                              });
+                            }
+                          }
                           }
                           variant="bordered"
                           className="border-indigo-400 text-indigo-400 hover:bg-indigo-500 hover:text-white"

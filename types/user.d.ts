@@ -15,20 +15,3 @@ export interface AppUser {
     timeout: number;
     shouldShowTimeoutProgress: boolean;
   }
-  export interface InterviewDetails {
-    profile: string;
-    duration: string;
-    description: string;
-    types: string[];
-    start_date: DateValue | null;
-    start_time: TimeValue | null;
-    expiry_date: DateValue | null;
-    expiry_time: TimeValue | null;
-    noOfQuestions: number;
-    level: string;
-  }
-
-  export interface Question {
-    type: string;
-    question: string;
-  }

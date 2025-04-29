@@ -1,26 +1,26 @@
 // app/page.tsx (Interview Setup Page)
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { FaClock, FaQuestion, FaChartLine, FaBuilding } from "react-icons/fa";
 import { Accordion, AccordionItem, Input, Spinner } from "@heroui/react";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebase"; // Your Firebase configuration
 import { useAuthContext } from "@/context/AuthContext";
-import { InterviewDetails, Question } from "@/types/user";
+import { InterviewDetails, Question } from "@/types/interview";
 
-interface InterviewPageProps {
-    params: { id: string };
-  }
+// interface InterviewPageProps {
+//     params: { id: string };
+//   }
 
-const InterviewSetup = ({ params }: InterviewPageProps) => {
+const InterviewSetup = () => {
   const router = useRouter();
-  const interviewId = params.id;
+  const params = useParams();
+  const interviewId = params?.id as string;
   const { user } = useAuthContext();
   
   const [interview, setInterview] = useState<InterviewDetails | null>(null);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const [fullName, setFullName] = useState("");
@@ -30,7 +30,7 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
   useEffect(() => {
     const fetchInterview = async () => {
         console.log(interviewId, user?.uid);
-      if (!interviewId || !user?.uid) return;
+      if (!interviewId) return;
 
       try {
         setLoading(true);
@@ -39,7 +39,6 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
 
         if (docSnap.exists()) {
           setInterview(docSnap.data() as InterviewDetails);
-          // setQuestions(docSnap.data().questions as Question[]);
         } else {
           setError("Interview not found");
         }
@@ -56,10 +55,6 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
 
   const handleJoinInterview = () => {
     if (!interviewId) return;
-    
-    // Store candidate details in session storage or pass as query params
-    // const candidateDetails = { fullName, email, contact };
-    // sessionStorage.setItem("candidateDetails", JSON.stringify(candidateDetails));
 
     const query = new URLSearchParams({
       fullName,
@@ -86,7 +81,7 @@ const InterviewSetup = ({ params }: InterviewPageProps) => {
     );
   }
 
-  if (!interview) {
+  if (!interview && !loading) {
     return (
       <div className="flex justify-center items-center h-screen">
         <p className="text-xl">No interview data found</p>

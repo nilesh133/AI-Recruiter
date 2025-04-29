@@ -5,15 +5,16 @@ import { Card, CardHeader, CardBody, Avatar, Button } from "@heroui/react";
 import { useEffect, useRef, useState } from "react";
 import { db } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
-import { InterviewDetails, Question } from "@/types/user";
-import { useRouter, useSearchParams } from "next/navigation";
+import { InterviewDetails, Question } from "@/types/interview";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import Vapi from "@vapi-ai/web";
 import { useInterview } from "@/hooks/useInterview";
+import { useToast } from "@/hooks/useToast";
 
-interface InterviewPageProps {
-  params: { id: string };
-}
+// interface InterviewPageProps {
+//   params: { id: string };
+// }
 
 const agent = {
   name: "Interviewer",
@@ -45,17 +46,19 @@ const agent = {
   },
 };
 
-export default function Ongoing({ params }: InterviewPageProps) {
+export default function Ongoing() {
   const router = useRouter();
   const { user } = useAuthContext();
   const { generateFeedBack } = useInterview();
   const vapiRef = useRef<Vapi | null>(null);
+  const params = useParams();
+  const paramss = useSearchParams();
 
-  const interviewId = params.id;
-  const searchParams = useSearchParams();
-  const fullName = searchParams.get("fullName");
-  const email = searchParams.get("email");
-  const contact = searchParams.get("contact");
+  const interviewId = params?.id as string;
+  const fullName = paramss.get("fullName");
+  const email = paramss.get("email");
+  const contact = paramss.get("contact");
+  const { addToastHandler } = useToast();
 
   const [time, setTime] = useState(0);
   const [questions, setQuestions] = useState<Question[]>([]);
@@ -79,7 +82,7 @@ export default function Ongoing({ params }: InterviewPageProps) {
 
   useEffect(() => {
     const fetchInterview = async () => {
-      if (!interviewId || !user?.uid) return;
+      if (!interviewId) return;
       try {
         setLoading(true);
         const docRef = doc(db, `/interviews/${interviewId}`);
@@ -220,6 +223,14 @@ Make sure the response is valid JSON only, without any explanations.`;
         const data = await res.json();
         handleGenerateReport(data.reportText); // Pass the generated report
       } catch (error) {
+        addToastHandler({
+          title: "Error while saving interview. Please try again.",
+          description: "",
+          color: "error",
+          timeout: 3000,
+          variant: "error",
+          shouldShowTimeoutProgress: true,
+        });
       } finally {
         setGenerating(false);
       }
@@ -237,7 +248,7 @@ Make sure the response is valid JSON only, without any explanations.`;
             Thank you for participating in the interview process!
           </p>
           {generating ? (
-            <p className="text-md text-gray-400 animate-pulse">
+            <p className="text-md text-red-400 animate-pulse">
               Your feedback is being generated. Do not close the window.
             </p>
           ) : (
@@ -271,7 +282,7 @@ Make sure the response is valid JSON only, without any explanations.`;
           </CardHeader>
           <CardBody className="flex flex-col items-center justify-center gap-4">
             <Avatar
-              src="https://i.pravatar.cc/150?img=1"
+              src=""
               size="lg"
               radius="full"
               className="w-20 h-20"
@@ -291,7 +302,7 @@ Make sure the response is valid JSON only, without any explanations.`;
           </CardHeader>
           <CardBody className="flex flex-col items-center justify-center gap-4">
             <Avatar
-              src="https://i.pravatar.cc/150?img=3"
+              src=""
               size="lg"
               radius="full"
               className="w-20 h-20"

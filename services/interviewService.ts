@@ -1,19 +1,23 @@
 import { db } from "@/lib/firebase";
 import { doc, collection, addDoc, Timestamp } from "firebase/firestore";
-import { InterviewDetails, Question } from "@/types/user";
+import { InterviewDetails, Question } from "@/types/interview";
 import { create } from "domain";
+import moment from "moment";
 
 export const addNewInterview = async (
   interviewDetails: InterviewDetails,
   questions: Question[],
   userId: string
 ) => {
+  debugger
   if (!userId) throw new Error("User ID is required");
 
   const interviewRef = collection(db, "interviews");
 
+  const {id, ...rest} = interviewDetails;
+
   const newInterview = {
-    ...interviewDetails,
+    ...rest,
     questions,
     userId,
     createdAt: Timestamp.now(),
@@ -45,7 +49,7 @@ export const generateFeedBackHandler = async (
     fullName,
     contact,
     email,
-    createdAt: Timestamp.now(),
+    createdAt: moment(new Date()).format("YYYY-MM-DD HH:mm:ss"),
   };
 
   const userCollectionRef = collection(db, `/interviews/${interviewId}/attendees`);

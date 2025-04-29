@@ -21,20 +21,28 @@ import {
   MdDashboard,
   MdLink,
 } from "react-icons/md";
-import { InterviewDetails } from "@/types/user";
-import { today, parseDate, parseTime, CalendarDateTime } from "@internationalized/date";
-import { Router, useRouter } from "next/navigation";
+import { InterviewDetails, Question } from "@/types/interview";
+import {
+  today,
+  parseDate,
+  parseTime,
+  CalendarDateTime,
+} from "@internationalized/date";
+import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/context/AuthContext";
 import { useInterview } from "@/hooks/useInterview";
 import { MdDone } from "react-icons/md";
 import { CalendarDate } from "@internationalized/date";
+import { useToast } from "@/hooks/useToast";
 
 const CreateInterviewMainAccordion = () => {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set(["1"]));
   const [interviewStage, setInterviewStage] = useState<number>(1); // 1: details, 2: questions, 3: summary
   const [interviewId, setInterviewId] = useState<string | null>(null);
+  const { addToastHandler } = useToast();
 
   const [interviewDetails, setInterviewDetails] = useState<InterviewDetails>({
+    id: "",
     profile: "",
     duration: "",
     description: "",
@@ -45,14 +53,16 @@ const CreateInterviewMainAccordion = () => {
     expiry_time: parseTime("12:00"),
     noOfQuestions: 5,
     level: "Easy",
+    userId: "",
+    createdAt: null,
   });
 
   const { addInterview } = useInterview();
   const { user } = useAuthContext();
-  const router = useRouter()
+  const router = useRouter();
 
   const [flagGeneratingQuestions, setFlagGeneratingQuestions] = useState(false);
-  const [generateQuestions, setGenerateQuestions] = useState([]);
+  const [generateQuestions, setGenerateQuestions] = useState<Question[]>([]);
 
   const handleGenerateQuestions = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
@@ -96,6 +106,14 @@ const CreateInterviewMainAccordion = () => {
       setInterviewStage(2);
       setSelectedKeys(new Set(["2"]));
     } catch (error) {
+      addToastHandler({
+        title: "Error while fetching interview questions. Please try again.",
+        description: "",
+        color: "error",
+        timeout: 3000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
       console.error("Error generating questions:", error);
     } finally {
       setFlagGeneratingQuestions(false);
@@ -129,7 +147,6 @@ const CreateInterviewMainAccordion = () => {
     questions: any,
     user_uid: string
   ) => {
-    debugger;
     try {
       const formattedStartDate = formatCalendarDateToDDMMYYYY(
         interviewDetails.start_date
@@ -138,9 +155,12 @@ const CreateInterviewMainAccordion = () => {
         interviewDetails.expiry_date
       );
 
-      const formattedStartTime = formatCalendarTime(interviewDetails?.start_time);
-      const formattedExpiryTime = formatCalendarTime(interviewDetails?.expiry_time);
-
+      const formattedStartTime = formatCalendarTime(
+        interviewDetails?.start_time
+      );
+      const formattedExpiryTime = formatCalendarTime(
+        interviewDetails?.expiry_time
+      );
 
       const interviewData = {
         ...interviewDetails,
@@ -152,12 +172,19 @@ const CreateInterviewMainAccordion = () => {
 
       await addInterview(interviewData, questions, user_uid, (res) => {
         console.log("Interview added successfully:", res);
-        setInterviewId(res.interviewId); // Assuming the response contains an id
+        setInterviewId(res.interviewId);
         setInterviewStage(3);
         setSelectedKeys(new Set(["3"]));
       });
     } catch (error) {
-      console.error("Error adding interview:", error);
+      addToastHandler({
+        title: "Error while creating interview. Please try again.",
+        description: "",
+        color: "error",
+        timeout: 3000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
     }
   };
 
@@ -207,7 +234,7 @@ const CreateInterviewMainAccordion = () => {
                   input: "text-white",
                 }}
                 name="profile"
-                value={interviewDetails.profile}
+                value={interviewDetails?.profile}
                 onChange={handleChange}
               />
             </div>
@@ -224,7 +251,7 @@ const CreateInterviewMainAccordion = () => {
                   input: "text-white",
                 }}
                 name="duration"
-                value={interviewDetails.duration}
+                value={interviewDetails?.duration}
                 onChange={handleChange}
               />
             </div>
@@ -258,7 +285,7 @@ const CreateInterviewMainAccordion = () => {
                 }}
                 type="number"
                 name="noOfQuestions"
-                value={interviewDetails.noOfQuestions}
+                value={interviewDetails?.noOfQuestions}
                 onChange={handleChange}
               />
             </div>
@@ -324,7 +351,7 @@ const CreateInterviewMainAccordion = () => {
                 variant="bordered"
                 classNames={{ trigger: "text-white" }}
                 name="start_date"
-                value={interviewDetails.start_date}
+                value={interviewDetails?.start_date}
                 onChange={(date) =>
                   setInterviewDetails((prev) => ({ ...prev, start_date: date }))
                 }
@@ -333,7 +360,7 @@ const CreateInterviewMainAccordion = () => {
                 label="Start Time"
                 variant="bordered"
                 classNames={{ trigger: "text-white" }}
-                value={interviewDetails.start_time}
+                value={interviewDetails?.start_time}
                 onChange={(time) =>
                   setInterviewDetails((prev) => ({ ...prev, start_time: time }))
                 }
@@ -347,7 +374,7 @@ const CreateInterviewMainAccordion = () => {
                 variant="bordered"
                 classNames={{ trigger: "text-white" }}
                 name="expiry_date"
-                value={interviewDetails.expiry_date}
+                value={interviewDetails?.expiry_date}
                 onChange={(date) =>
                   setInterviewDetails((prev) => ({
                     ...prev,
@@ -359,7 +386,7 @@ const CreateInterviewMainAccordion = () => {
                 label="Start Time"
                 variant="bordered"
                 classNames={{ trigger: "text-white" }}
-                value={interviewDetails.expiry_time}
+                value={interviewDetails?.expiry_time}
                 onChange={(time) =>
                   setInterviewDetails((prev) => ({
                     ...prev,
@@ -390,7 +417,10 @@ const CreateInterviewMainAccordion = () => {
                 className="mt-4 w-[200px]"
                 onClick={handleGenerateQuestions}
                 isDisabled={Object.entries(interviewDetails).some(
-                  ([key, value]) => !value || (Array.isArray(value) && value.length === 0))}
+                  ([key, value]) =>
+                    !["id", "userId", "createdAt"].includes(key) &&
+                    (!value || (Array.isArray(value) && value.length === 0))
+                )}
               >
                 Generate
               </Button>
@@ -528,23 +558,33 @@ const CreateInterviewMainAccordion = () => {
             <div className="flex items-center gap-2">
               {/* <MdAccessTime className="text-primary text-lg" /> */}
               <p className="text-sm bg-[#111111] p-2 rounded-md">
-                Duration <span className="border-l-1 pl-1">{interviewDetails?.duration} mins</span>
+                Duration{" "}
+                <span className="border-l-1 pl-1">
+                  {interviewDetails?.duration} mins
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-2">
               {/* <MdCalendarToday className="text-primary" /> */}
               <p className="text-sm bg-[#111111] p-2 rounded-md">
-                Expiry: <span className="border-l-1 pl-1">25 Apr 2025, 11:59 PM</span>
+                Expiry:{" "}
+                <span className="border-l-1 pl-1">25 Apr 2025, 11:59 PM</span>
               </p>
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm bg-[#111111] p-2 rounded-md">
-                Questions: <span className="border-l-1 pl-1">{interviewDetails?.noOfQuestions}</span>
+                Questions:{" "}
+                <span className="border-l-1 pl-1">
+                  {interviewDetails?.noOfQuestions}
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm bg-[#111111] p-2 rounded-md">
-                Type: <span className="border-l-1 pl-1">{interviewDetails?.types?.join(',')}</span>
+                Type:{" "}
+                <span className="border-l-1 pl-1">
+                  {interviewDetails?.types?.join(",")}
+                </span>
               </p>
             </div>
           </div>
@@ -557,7 +597,7 @@ const CreateInterviewMainAccordion = () => {
               startContent={<MdDashboard />}
               className="text-white font-semibold"
               onPress={() => {
-                router.push("/dashboard")
+                router.push("/dashboard");
               }}
               onClick={() => console.log("Navigate to dashboard")}
             >

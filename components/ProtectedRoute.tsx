@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthContext } from "@/context/AuthContext";
+import { Spinner } from "@heroui/react";
 
 export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuthContext();
@@ -15,7 +16,9 @@ export const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }, [user, loading, router]);
 
   if (loading || !user) {
-    return <div className="text-center mt-20 text-gray-600">Loading...</div>;
+    return <div className="flex justify-center items-center h-screen">
+    <Spinner size="lg" />
+  </div>;
   }
 
   return <>{children}</>;
