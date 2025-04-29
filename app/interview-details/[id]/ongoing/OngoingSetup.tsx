@@ -42,13 +42,13 @@ const agent = {
   },
 };
 
-export default function OngoingSetup({interviewId}) {
+export default function OngoingSetup({interviewId}: { interviewId: any }) {
   const router = useRouter();
   const { user } = useAuthContext();
   const { generateFeedBack } = useInterview();
   const vapiRef = useRef<Vapi | null>(null);
   const params = useParams();
-  const paramss = useSearchParams();
+  const paramss: any = useSearchParams();
 
   const fullName = paramss.get("fullName");
   const email = paramss.get("email");

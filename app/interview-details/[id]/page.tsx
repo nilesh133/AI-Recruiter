@@ -1,6 +1,10 @@
 import InterviewSetup from "./InterviewSetup";
 
-const InterviewSetupPage = async ({ params }) => {
+interface Props {
+  params: { id: any };
+}
+
+const InterviewSetupPage = async ({ params }: Props) => {
   const { id } = await params
   return <InterviewSetup interviewId={id} />;
 };

@@ -10,7 +10,7 @@ import { useAuthContext } from "@/context/AuthContext";
 import { InterviewDetails } from "@/types/interview";
 
 interface Props {
-  interviewId: string;
+  interviewId: any;
 }
 
 const InterviewSetup = ({ interviewId }: Props) => {

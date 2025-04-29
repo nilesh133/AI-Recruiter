@@ -6,8 +6,8 @@ import { doc, getDoc } from "firebase/firestore";
 import { useState, useEffect } from "react";
 
 interface InterviewReportProps {
-    interviewId: string;
-    reportId: string;
+    interviewId: any;
+    reportId: any;
   }
 
 export default function UserInterviewReport({ interviewId, reportId }: InterviewReportProps) {

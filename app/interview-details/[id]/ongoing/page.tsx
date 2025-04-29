@@ -1,6 +1,10 @@
 import OngoingSetup from "./OngoingSetup";
 
-const Ongoing = async ({ params }) => {
+interface PageProps {
+  params: { id: any };
+}
+
+const Ongoing = async ({ params }: PageProps) => {
   const { id } = await params
   return <OngoingSetup interviewId={id} />;
 };
