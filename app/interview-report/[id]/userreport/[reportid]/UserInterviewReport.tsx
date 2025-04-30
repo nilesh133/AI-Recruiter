@@ -29,7 +29,9 @@ export default function UserInterviewReport({ interviewId, reportId }: Interview
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          const parsedObject = JSON.parse(docSnap.data().data);
+          debugger;
+          console.log("Document data:", docSnap.data());
+          const parsedObject = JSON.parse(docSnap.data().data?.replace(/```/g, ''));
           setUserReport({ ...parsedObject, ...docSnap?.data() });
         } else {
           setError("Interview not found");
