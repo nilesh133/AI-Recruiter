@@ -10,8 +10,8 @@ export interface AppUser {
   export interface ToastProps {
     title: string;
     description: string;
-    color: string;
-    variant: string;
+    color: any;
+    variant: any;
     timeout: number;
     shouldShowTimeoutProgress: boolean;
   }
