@@ -347,7 +347,7 @@ const CreateInterviewMainAccordion = () => {
             <div className="flex-1">
               <p className="font-medium mb-1">Interview Start</p>
               <DatePicker
-                placeholder="Start Date"
+                // placeholder="Start Date"
                 variant="bordered"
                 // classNames={{ trigger: "text-white" }}
                 name="start_date"
@@ -370,7 +370,7 @@ const CreateInterviewMainAccordion = () => {
             <div className="flex-1">
               <p className="font-medium mb-1">Interview Expiry</p>
               <DatePicker
-                placeholder="Start Date"
+                // placeholder="Start Date"
                 variant="bordered"
                 // classNames={{ trigger: "text-white" }}
                 name="expiry_date"
