@@ -14,7 +14,7 @@ import { auth } from "@/lib/firebase";
 const Navbar = () => {
   const { user, loading } = useAuthContext(); // notice added loading
   const router = useRouter();
-  const pathname = usePathname();
+  const pathname: any = usePathname();
   const hideNavbarRoutes = [
     "/signup",
     "/login",

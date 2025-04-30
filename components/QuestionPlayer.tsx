@@ -2,7 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import Vapi from "@vapi-ai/web";
 
-const agent = {
+const agent: any = {
   name: "Interviewer",
   firstMessage:
     "Hello! Thank you for taking the time to speak with me today. I'm excited to learn more about you and your experience.",
