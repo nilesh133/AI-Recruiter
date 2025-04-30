@@ -2,14 +2,15 @@
 import { useParams } from "next/navigation";
 import OngoingSetup from "./OngoingSetup";
 
-// interface PageProps {
-//   params: { id: string };
-// }
-
 const Ongoing = () => {
-  const params = useParams<{ id: string; }>()
-  const { id } = params
-  return <OngoingSetup interviewId={id} />;
+  const params = useParams<{ id: string }>();
+  
+  if (!params?.id) {
+    // Handle the case where id is missing
+    return <div>Interview ID not found</div>;
+  }
+
+  return <OngoingSetup interviewId={params.id} />;
 };
 
 export default Ongoing;

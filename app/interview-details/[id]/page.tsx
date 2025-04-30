@@ -2,14 +2,18 @@
 import { useParams } from "next/navigation";
 import InterviewSetup from "./InterviewSetup";
 
-// interface Props {
-//   params: { id: string };
-// }
-
 const InterviewSetupPage = () => {
-  const params = useParams<{ id: string; }>()
-  const { id } = params
-  return <InterviewSetup interviewId={id} />;
+  const params = useParams<{ id: string }>();
+  
+  if (!params?.id) {
+    return (
+      <div className="p-4 text-red-500">
+        Interview ID not found
+      </div>
+    );
+  }
+
+  return <InterviewSetup interviewId={params.id} />;
 };
 
 export default InterviewSetupPage;
