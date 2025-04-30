@@ -1,9 +1,11 @@
+import { useParams } from "next/navigation";
 import InterviewReport from "./InterviewReport";
-interface PageProps {
-  params: { id: string};
-}
+// interface PageProps {
+//   params: { id: string};
+// }
 
-export default async function InterviewReportPage({ params }: PageProps) {
+export default function InterviewReportPage() {
+  const params = useParams<{ id: string; }>()
   const { id } = params
   return <InterviewReport interviewId={id} />;
 }

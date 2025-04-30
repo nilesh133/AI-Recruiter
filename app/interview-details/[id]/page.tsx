@@ -1,10 +1,12 @@
+import { useParams } from "next/navigation";
 import InterviewSetup from "./InterviewSetup";
 
-interface Props {
-  params: { id: string };
-}
+// interface Props {
+//   params: { id: string };
+// }
 
-const InterviewSetupPage = async ({ params }: Props) => {
+const InterviewSetupPage = () => {
+  const params = useParams<{ id: string; }>()
   const { id } = params
   return <InterviewSetup interviewId={id} />;
 };
