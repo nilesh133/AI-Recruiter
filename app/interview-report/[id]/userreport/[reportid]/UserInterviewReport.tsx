@@ -83,15 +83,15 @@ export default function UserInterviewReport({ interviewId, reportId }: Interview
             <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-6">
               <div className="flex-1">
                 <p className="mb-1">Technical Skills</p>
-                <Progress value={userReport?.skills_score["technical_knowledge"]?.score * 10} max={100} color="primary" />
+                <Progress value={userReport?.skills_score["technical_knowledge"]?.score * 10} color="primary" />
               </div>
               <div className="flex-1">
                 <p className="mb-1">Communication</p>
-                <Progress value={userReport?.skills_score["communication"]?.score * 10} max={100} color="secondary" />
+                <Progress value={userReport?.skills_score["communication"]?.score * 10} color="secondary" />
               </div>
               <div className="flex-1">
                 <p className="mb-1">Problem Solving</p>
-                <Progress value={userReport?.skills_score["problem_solving"]?.score * 10} max={100} color="success" />
+                <Progress value={userReport?.skills_score["problem_solving"]?.score * 10} color="success" />
               </div>
             </div>
           </CardBody>
@@ -107,7 +107,7 @@ export default function UserInterviewReport({ interviewId, reportId }: Interview
               <Accordion variant="bordered" className="w-full">
                 <AccordionItem title="View Questions & Answers" className=" text-white">
                   <div className="space-y-6">
-                    {userReport?.question_score?.map((q, index) => (
+                    {userReport?.question_score?.map((q: any, index: any) => (
                       <div key={index} className="bg-zinc-800 p-4 rounded-lg shadow-md">
                         <p className="font-semibold text-white mb-2">
                           Q{index + 1}: {q.question}
