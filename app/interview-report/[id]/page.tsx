@@ -4,6 +4,6 @@ interface PageProps {
 }
 
 export default async function InterviewReportPage({ params }: PageProps) {
-  const { id } = await params
+  const { id } = params
   return <InterviewReport interviewId={id} />;
 }

@@ -5,7 +5,7 @@ interface Props {
 }
 
 const InterviewSetupPage = async ({ params }: Props) => {
-  const { id } = await params
+  const { id } = params
   return <InterviewSetup interviewId={id} />;
 };
 
