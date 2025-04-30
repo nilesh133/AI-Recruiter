@@ -9,20 +9,26 @@ import { InterviewDetails, Question } from "@/types/interview";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import Vapi from "@vapi-ai/web";
+import Assistant from "@vapi-ai/web";
+import Transcriber from "@vapi-ai/web";
+import Voice from "@vapi-ai/web";
+import Model from "@vapi-ai/web";
 import { useInterview } from "@/hooks/useInterview";
 import { useToast } from "@/hooks/useToast";
+import CreateAssistantDTO  from "@vapi-ai/web";
 
-const agent = {
+
+const agent: CreateAssistantDTO = {
   name: "Interviewer",
   firstMessage:
     "Hello! Thank you for taking the time to speak with me today. I'm excited to learn more about you and your experience.",
   transcriber: {
-    provider: "deepgram",
+    provider: "deepgram" as const, // Mark as literal type
     model: "nova-2",
     language: "en",
   },
   voice: {
-    provider: "11labs",
+    provider: "11labs" as const, // Mark as literal type
     voiceId: "sarah",
     stability: 0.4,
     similarityBoost: 0.8,
@@ -31,12 +37,12 @@ const agent = {
     useSpeakerBoost: true,
   },
   model: {
-    provider: "openai",
+    provider: "openai" as const, // Mark as literal type
     model: "gpt-4",
     messages: [
       {
-        role: "system",
-        content: `You are a professional job interviewer conducting a real-time voice interview with a candidate. Follow the structured flow. Engage naturally. Keep answers short and polite.`,
+        role: "system" as const,
+        content: "You are a professional job interviewer conducting a real-time voice interview with a candidate. Follow the structured flow. Engage naturally. Keep answers short and polite.",
       },
     ],
   },
