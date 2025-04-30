@@ -58,7 +58,7 @@ const CreateInterviewMainAccordion = () => {
   });
 
   const { addInterview } = useInterview();
-  const { user } = useAuthContext();
+  const { user }: any = useAuthContext();
   const router = useRouter();
 
   const [flagGeneratingQuestions, setFlagGeneratingQuestions] = useState(false);
