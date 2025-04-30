@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { Configuration, OpenAIApi } from 'openai-edge';
 
 export default function InterviewPage() {
-  const searchParams = useSearchParams();
+  const searchParams: any = useSearchParams();
   const tech = searchParams.get('tech') || 'React';
   const difficulty = searchParams.get('difficulty') || 'Easy';
   const questionCount = Number(searchParams.get('count') || 5);
