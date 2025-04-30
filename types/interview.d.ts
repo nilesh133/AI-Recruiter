@@ -8,7 +8,7 @@ export interface InterviewDetails {
     start_time: TimeValue | null;
     expiry_date: DateValue | null;
     expiry_time: TimeValue | null;
-    noOfQuestions: number;
+    noOfQuestions: string;
     level: string;
     userId: string;
     createdAt: DateValue | null;

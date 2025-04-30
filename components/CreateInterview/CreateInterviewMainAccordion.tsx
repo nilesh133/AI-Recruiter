@@ -51,7 +51,7 @@ const CreateInterviewMainAccordion = () => {
     start_time: parseTime("12:00"),
     expiry_date: today("UTC"),
     expiry_time: parseTime("12:00"),
-    noOfQuestions: 5,
+    noOfQuestions: "5",
     level: "Easy",
     userId: "",
     createdAt: null,
@@ -349,7 +349,7 @@ const CreateInterviewMainAccordion = () => {
               <DatePicker
                 placeholder="Start Date"
                 variant="bordered"
-                classNames={{ trigger: "text-white" }}
+                // classNames={{ trigger: "text-white" }}
                 name="start_date"
                 value={interviewDetails?.start_date}
                 onChange={(date) =>
@@ -359,7 +359,7 @@ const CreateInterviewMainAccordion = () => {
               <TimeInput
                 label="Start Time"
                 variant="bordered"
-                classNames={{ trigger: "text-white" }}
+                // classNames={{ trigger: "text-white" }}
                 value={interviewDetails?.start_time}
                 onChange={(time) =>
                   setInterviewDetails((prev) => ({ ...prev, start_time: time }))
@@ -372,7 +372,7 @@ const CreateInterviewMainAccordion = () => {
               <DatePicker
                 placeholder="Start Date"
                 variant="bordered"
-                classNames={{ trigger: "text-white" }}
+                // classNames={{ trigger: "text-white" }}
                 name="expiry_date"
                 value={interviewDetails?.expiry_date}
                 onChange={(date) =>
@@ -385,7 +385,7 @@ const CreateInterviewMainAccordion = () => {
               <TimeInput
                 label="Start Time"
                 variant="bordered"
-                classNames={{ trigger: "text-white" }}
+                // classNames={{ trigger: "text-white" }}
                 value={interviewDetails?.expiry_time}
                 onChange={(time) =>
                   setInterviewDetails((prev) => ({
