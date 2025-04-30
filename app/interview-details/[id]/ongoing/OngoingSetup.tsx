@@ -18,7 +18,7 @@ import { useToast } from "@/hooks/useToast";
 import CreateAssistantDTO  from "@vapi-ai/web";
 
 
-const agent: CreateAssistantDTO = {
+const agent: any = {
   name: "Interviewer",
   firstMessage:
     "Hello! Thank you for taking the time to speak with me today. I'm excited to learn more about you and your experience.",
