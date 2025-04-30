@@ -22,7 +22,7 @@ export interface Question {
 
 export interface Attendees {
     id: string;
-    attendee_name: string;
-    attendee_email: string;
-    attendee_contact: string;
+    fullName: string;
+    createdAt: any;
+    data: any;
 }
