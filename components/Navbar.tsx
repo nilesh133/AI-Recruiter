@@ -43,11 +43,11 @@ const Navbar = () => {
 
       {!user ? (
         <div className="flex items-center gap-4">
-          <Button className="flex items-center gap-2 bg-white text-black">
+          <Button className="flex items-center gap-2 bg-white text-black" onPress={() => router.push("/signup")}>
             <FaUserPlus className="text-lg" />
             Sign Up
           </Button>
-          <Button variant="bordered" className="flex items-center gap-2">
+          <Button variant="bordered" className="flex items-center gap-2" onPress={() => router.push("/login")}>
             <FaSignInAlt className="text-lg" />
             Log In
           </Button>

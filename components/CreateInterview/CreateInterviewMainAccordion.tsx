@@ -533,7 +533,7 @@ const CreateInterviewMainAccordion = () => {
               <MdLink className="text-xl text-primary" />
               <p className="text-white font-medium text-sm sm:text-base">
                 {interviewId
-                  ? `https://ai-recruiter-mauve.vercel.app/interview/${interviewId}`
+                  ? `https://ai-recruiter-mauve.vercel.app/interview-details/${interviewId}`
                   : "Generating link..."}
               </p>
             </div>
@@ -545,7 +545,7 @@ const CreateInterviewMainAccordion = () => {
                 isDisabled={!interviewId}
                 onClick={() =>
                   navigator.clipboard.writeText(
-                    `https://ai-recruiter-mauve.vercel.app/interview/${interviewId}`
+                    `https://ai-recruiter-mauve.vercel.app/interview-details/${interviewId}`
                   )
                 }
               >
