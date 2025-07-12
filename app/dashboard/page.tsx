@@ -24,7 +24,7 @@ export default function DashboardPage() {
   const { addToastHandler } = useToast();
   const router = useRouter();
   const [loading, setLoading] = useState<boolean | null>(null);
-  const [allInterviews, setAllInterviews] = useState<any[]>([]);
+  const [allInterviews, setAllInterviews] = useState<(any & { attendeeCount: number })[]>([]);
   const [selectedType, setSelectedType] = useState<string>("voice");
 
   const fetchInterviews = async (type: string) => {
@@ -35,14 +35,24 @@ export default function DashboardPage() {
       const querySnapshot = await getDocs(collectionRef);
 
       const interviews: any[] = [];
-      querySnapshot.forEach((doc) => {
-        if (doc?.data()?.userId != user?.uid) return;
-        interviews.push({
-          id: doc.id,
-          ...doc.data(),
-        });
-      });
-
+      for (const docSnap of querySnapshot.docs) {
+        if (docSnap?.data()?.userId != user?.uid) continue;
+        const interviewData = { id: docSnap.id, ...docSnap.data() } as any & { attendeeCount: number };
+        // Fetch attendee count
+        let attendeeCount = 0;
+        try {
+          const attendeesCollection =
+            type === "voice"
+              ? collection(db, `interviews/${docSnap.id}/attendees`)
+              : collection(db, `mcqInterviews/${docSnap.id}/attendees`);
+          const attendeesSnap = await getDocs(attendeesCollection);
+          attendeeCount = attendeesSnap.size;
+        } catch (e) {
+          attendeeCount = 0;
+        }
+        interviewData.attendeeCount = attendeeCount;
+        interviews.push(interviewData);
+      }
       setAllInterviews(interviews);
     } catch (error) {
       console.error("Error fetching interviews:", error);
@@ -173,7 +183,7 @@ export default function DashboardPage() {
                       Level
                     </th>
                     <th className="py-3 px-6 text-left font-semibold text-gray-300 border-b border-[#575757]">
-                      No. of Questions
+                      No. of Attendees
                     </th>
                     {selectedType === "voice" && (
                       <th className="py-3 px-6 text-left font-semibold text-gray-300 border-b border-[#575757]">
@@ -203,7 +213,7 @@ export default function DashboardPage() {
                           {interview?.level}
                         </td>
                         <td className="py-3 px-6 border-b border-[#575757]">
-                          {interview?.noOfQuestions}
+                          {interview?.attendeeCount}
                         </td>
                         {selectedType === "voice" && (
                           <td className="py-3 px-6 border-b border-[#575757]">

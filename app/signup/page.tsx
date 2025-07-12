@@ -170,7 +170,7 @@ export default function Signup() {
 
   return (
     <div className="min-h-screen h-screen flex font-bricolage_grotesque">
-      <div className="hidden md:block w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 !flex flex-col justify-end gap-4">
+      <div className="hidden md:flex w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 flex-col justify-end gap-4">
         {/* <div className="flex gap-2 items-center">
           <span className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center text-lg font-bold">
             A
