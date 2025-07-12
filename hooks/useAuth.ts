@@ -1,64 +1,104 @@
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
-import { doc, setDoc, getDoc } from "firebase/firestore";
-import { auth, db } from "@/lib/firebase";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { auth } from "@/lib/firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  User,
+} from "firebase/auth";
+import { useAuthContext } from "@/context/AuthContext";
+
+// Extended user type that includes Firestore data
+interface ExtendedUser extends User {
+  userData?: {
+    name: string;
+    email: string;
+    role?: string;
+    createdAt?: Date;
+  };
+}
 
 export const useAuth = () => {
+  const [user, setUser] = useState<ExtendedUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const signup = async (
-    userInfo: { name: string; email: string; role: string },
-    password: string,
-    onSuccess: () => void
-  ) => {
-    try {
-      setError(null);
-  
-      const userCred = await createUserWithEmailAndPassword(auth, userInfo.email, password);
-      await setDoc(doc(db, "users", userCred.user.uid), {
-        ...userInfo,
-        uid: userCred.user.uid,
-      });
-  
-      onSuccess();
-    } catch (err: any) {
-      if (err.code === "auth/email-already-in-use") {
-        setError("Email ID already exists");
-        throw new Error("email-exists");
-      } else {
-        setError("Something went wrong");
-        throw new Error("signup-failed");
-      }
-    }
-  };
-  
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      setUser(firebaseUser as ExtendedUser);
+      setLoading(false);
+    });
 
-  const login = async (
-    email: string,
-    password: string,
-    onSuccess: () => void
-  ) => {
+    return () => unsubscribe();
+  }, []);
+
+  const signup = async (email: string, password: string) => {
     try {
       setError(null);
-  
-      const userCred = await signInWithEmailAndPassword(auth, email, password);
-      const userDoc = await getDoc(doc(db, "users", userCred.user.uid));
-  
-      if (!userDoc.exists()) {
-        throw new Error("user-doc-not-found");
-      }
-  
-      onSuccess();
-    } catch (err: any) {
-      if (err.code === "auth/user-not-found" || err.code === "auth/invalid-credential") {
-        throw new Error("invalid-credentials");
-      } else if (err.message === "user-doc-not-found") {
-        throw new Error("user-doc-not-found");
-      } else {
-        throw new Error("unknown-error");
-      }
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      return userCredential.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
     }
   };
 
-  return { signup, login, error };
+  const login = async (email: string, password: string) => {
+    try {
+      setError(null);
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
+      return userCredential.user;
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  const logout = async () => {
+    try {
+      setError(null);
+      await signOut(auth);
+    } catch (error: any) {
+      setError(error.message);
+      throw error;
+    }
+  };
+
+  return {
+    user,
+    loading,
+    error,
+    signup,
+    login,
+    logout,
+  };
+};
+
+// Hook to get user data with Firestore information
+export const useUserData = () => {
+  const { user, loading, refreshUserData } = useAuthContext();
+  
+  return {
+    user,
+    loading,
+    userData: user?.userData,
+    refreshUserData,
+    // Helper functions
+    getUserName: () => user?.userData?.name || user?.displayName || 'User',
+    getUserEmail: () => user?.userData?.email || user?.email || '',
+    getUserRole: () => user?.userData?.role || 'user',
+    getUserInitial: () => {
+      const name = user?.userData?.name || user?.displayName || user?.email?.charAt(0) || 'U';
+      return name.toUpperCase();
+    }
+  };
 };

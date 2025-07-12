@@ -33,6 +33,8 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  console.log(attendees, "attendees");
+
   useEffect(() => {
     const fetchInterview = async () => {
       if (!interviewId || !user?.uid) return;
@@ -69,6 +71,14 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
     fetchInterview();
   }, [interviewId, user?.uid]);
 
+  if (!interviewId) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-xl">No interview data found</p>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -91,6 +101,9 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
         <h1 className="text-3xl font-semibold text-white text-center">
           Interview Details
         </h1>
+        <p className="text-gray-400 text-center !m-0 font-semibold">
+          {`https://ai-recruiter-mauve.vercel.app/interview-details/${interviewId}`}
+        </p>
 
         {/* Interview Info */}
         <Card className="bg-gradient-to-br from-zinc-900 to-zinc-800 text-white shadow-xl min-w-[70%]">
@@ -136,7 +149,7 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
             Attendees
           </CardHeader>
           <CardBody className="space-y-6">
-            {attendees.map((user, index) => (
+            {attendees?.length > 0 && attendees?.map((user, index) => (
               <div
                 key={index}
                 className="flex justify-between items-center border-b border-zinc-700 pb-4"
@@ -144,10 +157,10 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
                 <div className="flex items-center gap-4">
                   <Avatar src={""} size="lg" radius="full" />
                   <div>
-                    <p className="font-semibold text-[16px]">{user.fullName}</p>
+                    <p className="font-semibold text-[16px]">{user?.fullName}</p>
                     <p className="text-gray-400 text-sm">
                       Interviewed on{" "}
-                      {moment(new Date(user?.createdAt)).format(
+                      {moment(new Date(user?.createdAt || "")).format(
                         "MMMM Do YYYY, h:mm:ss a"
                       )}
                     </p>
@@ -155,7 +168,9 @@ export default function InterviewReport({ interviewId }: InterviewReportProps) {
                 </div>
                 <div className="flex items-center gap-4">
                   <span className="text-xl font-bold text-blue-400">
-                    {JSON.parse(user?.data)?.overall_score}/10
+                    {
+                      user && user.data && JSON.parse(user.data)?.overall_score ? JSON.parse(user.data)?.overall_score : 0
+                    } / 10
                   </span>
                   <Button
                     onPress={() => {

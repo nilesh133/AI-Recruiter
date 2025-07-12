@@ -34,7 +34,8 @@ export default function Login() {
     setLoader(true);
 
     try {
-      await login(form.email, form.password, () => router.push("/dashboard"));
+      await login(form.email, form.password);
+      router.push("/dashboard");
 
       addToastHandler({
         title: "Login Successful",
@@ -74,7 +75,7 @@ export default function Login() {
 
   return (
     <div className="min-h-screen h-screen flex font-bricolage_grotesque">
-      <div className="w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 flex flex-col gap-4 justify-end">
+      <div className="hidden md:block w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 flex flex-col gap-4 justify-end">
         {/* <div className="flex gap-2 items-center">
           <span className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center text-lg font-bold">
             A
@@ -85,7 +86,7 @@ export default function Login() {
           <h1>Hire the Right Talent, Faster with AI</h1>
         </div>
       </div>
-      <div className="w-[50%] h-full bg-[#080808] flex items-center justify-center">
+      <div className="w-[100%] md:w-[50%] h-full bg-[#080808] flex items-center justify-center">
         <form
           onSubmit={handleSubmit}
           className="shadow-md rounded-xl p-8 max-w-md w-full space-y-6"

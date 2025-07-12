@@ -34,12 +34,18 @@ import { useInterview } from "@/hooks/useInterview";
 import { MdDone } from "react-icons/md";
 import { CalendarDate } from "@internationalized/date";
 import { useToast } from "@/hooks/useToast";
+import { formatCalendarDateToDDMMYYYY, formatCalendarTime } from "@/helpers/clientLib";
 
 const CreateInterviewMainAccordion = () => {
   const [selectedKeys, setSelectedKeys] = useState<Set<string>>(new Set(["1"]));
   const [interviewStage, setInterviewStage] = useState<number>(1); // 1: details, 2: questions, 3: summary
   const [interviewId, setInterviewId] = useState<string | null>(null);
   const { addToastHandler } = useToast();
+
+  // Error handling states
+  const [validationErrors, setValidationErrors] = useState<{[key: string]: string}>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [apiError, setApiError] = useState<string | null>(null);
 
   const [interviewDetails, setInterviewDetails] = useState<InterviewDetails>({
     id: "",
@@ -64,21 +70,91 @@ const CreateInterviewMainAccordion = () => {
   const [flagGeneratingQuestions, setFlagGeneratingQuestions] = useState(false);
   const [generateQuestions, setGenerateQuestions] = useState<Question[]>([]);
 
+  // Validation function
+  const validateForm = (): boolean => {
+    const errors: {[key: string]: string} = {};
+
+    if (!interviewDetails?.profile?.trim()) {
+      errors.profile = "Interview profile is required";
+    }
+
+    if (!interviewDetails?.duration?.trim()) {
+      errors.duration = "Duration is required";
+    } else if (isNaN(Number(interviewDetails.duration)) || Number(interviewDetails.duration) <= 0) {
+      errors.duration = "Duration must be a positive number";
+    }
+
+    if (!interviewDetails?.description?.trim()) {
+      errors.description = "Job description is required";
+    }
+
+    if (!interviewDetails?.noOfQuestions?.trim()) {
+      errors.noOfQuestions = "Number of questions is required";
+    } else if (isNaN(Number(interviewDetails.noOfQuestions)) || Number(interviewDetails.noOfQuestions) <= 0) {
+      errors.noOfQuestions = "Number of questions must be a positive number";
+    }
+
+    if (!interviewDetails?.level?.trim()) {
+      errors.level = "Interview level is required";
+    }
+
+    if (!interviewDetails?.types || interviewDetails.types.length === 0) {
+      errors.types = "At least one interview type must be selected";
+    }
+
+    if (!interviewDetails?.start_date) {
+      errors.start_date = "Start date is required";
+    }
+
+    if (!interviewDetails?.start_time) {
+      errors.start_time = "Start time is required";
+    }
+
+    if (!interviewDetails?.expiry_date) {
+      errors.expiry_date = "Expiry date is required";
+    }
+
+    if (!interviewDetails?.expiry_time) {
+      errors.expiry_time = "Expiry time is required";
+    }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleGenerateQuestions = async (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>
   ) => {
     try {
+      // Clear previous errors
+      setApiError(null);
+      setValidationErrors({});
+
+      // Validate form
+      if (!validateForm()) {
+        addToastHandler({
+          title: "Please fix the errors before generating questions",
+          description: "Check the form fields marked with errors",
+          color: "warning",
+          timeout: 4000,
+          variant: "warning",
+          shouldShowTimeoutProgress: true,
+        });
+        return;
+      }
+
       setFlagGeneratingQuestions(true);
+      
       const PROMPT = `
   You are an expert technical interviewer.
   
   Based on the following inputs, generate a structured list of high-quality interview questions:
   
-  - Job Title: ${interviewDetails?.profile}
-  - Job Description: ${interviewDetails?.description}
-  - Interview Level: ${interviewDetails?.level}
-  - Interview Types: ${interviewDetails?.types?.join(", ")}
-  - Total Number of Questions: ${interviewDetails?.noOfQuestions}
+  - Job Title: ${interviewDetails?.profile || 'Not specified'}
+  - Job Description: ${interviewDetails?.description || 'Not specified'}
+  - Interview Level: ${interviewDetails?.level || 'Easy'}
+  - Interview Types: ${interviewDetails?.types?.join(", ") || 'Not specified'}
+  - Total Number of Questions: ${interviewDetails?.noOfQuestions || '5'}
   
   Your task:
   1. Analyze the job description to identify key responsibilities, required skills, and expected experience.
@@ -96,25 +172,48 @@ const CreateInterviewMainAccordion = () => {
   
   ❌ Do NOT include any explanation, introduction, markdown, or wrapping text — return only the JSON array.
   `;
+
       const res = await fetch("/api/generateQuestions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ PROMPT }),
       });
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+
       const data = await res.json();
+      
+      if (!data || !data.questions || !Array.isArray(data.questions)) {
+        throw new Error("Invalid response format from API");
+      }
+
       setGenerateQuestions(data.questions);
       setInterviewStage(2);
       setSelectedKeys(new Set(["2"]));
-    } catch (error) {
+      
       addToastHandler({
-        title: "Error while fetching interview questions. Please try again.",
-        description: "",
-        color: "error",
+        title: "Questions generated successfully!",
+        description: `Generated ${data.questions.length} questions`,
+        color: "success",
         timeout: 3000,
+        variant: "success",
+        shouldShowTimeoutProgress: true,
+      });
+
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      setApiError(error instanceof Error ? error.message : "Failed to generate questions");
+      
+      addToastHandler({
+        title: "Error generating questions",
+        description: "Please try again or check your internet connection",
+        color: "error",
+        timeout: 4000,
         variant: "error",
         shouldShowTimeoutProgress: true,
       });
-      console.error("Error generating questions:", error);
     } finally {
       setFlagGeneratingQuestions(false);
     }
@@ -124,30 +223,52 @@ const CreateInterviewMainAccordion = () => {
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
       const { name, value } = e.target;
       setInterviewDetails((prev) => ({ ...prev, [name]: value }));
+      
+      // Clear validation error for this field when user starts typing
+      if (validationErrors[name]) {
+        setValidationErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors[name];
+          return newErrors;
+        });
+      }
     },
-    []
+    [validationErrors]
   );
-
-  const formatCalendarDateToDDMMYYYY = (date: CalendarDate): string => {
-    const day = String(date.day).padStart(2, "0");
-    const month = String(date.month).padStart(2, "0");
-    const year = String(date.year);
-    return `${day}/${month}/${year}`;
-  };
-
-  const formatCalendarTime = (time: CalendarDateTime): string => {
-    const hour = String(time.hour).padStart(2, "0");
-    const minute = String(time.minute).padStart(2, "0");
-    // const year = String(date.year);
-    return `${hour}:${minute}`;
-  };
 
   const handleAddNewInterview = async (
     interviewDetails: InterviewDetails,
     questions: any,
     user_uid: string
   ) => {
+    if (!user_uid) {
+      addToastHandler({
+        title: "Authentication Error",
+        description: "Please log in again",
+        color: "error",
+        timeout: 3000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
+      return;
+    }
+
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      addToastHandler({
+        title: "No Questions Available",
+        description: "Please generate questions first",
+        color: "warning",
+        timeout: 3000,
+        variant: "warning",
+        shouldShowTimeoutProgress: true,
+      });
+      return;
+    }
+
     try {
+      setIsSubmitting(true);
+      setApiError(null);
+
       const formattedStartDate = formatCalendarDateToDDMMYYYY(
         interviewDetails.start_date
       );
@@ -172,14 +293,66 @@ const CreateInterviewMainAccordion = () => {
 
       await addInterview(interviewData, questions, user_uid, (res) => {
         console.log("Interview added successfully:", res);
-        setInterviewId(res.interviewId);
+        setInterviewId(res?.interviewId || null);
         setInterviewStage(3);
         setSelectedKeys(new Set(["3"]));
+        
+        addToastHandler({
+          title: "Interview created successfully!",
+          description: "Your interview link is ready to share",
+          color: "success",
+          timeout: 3000,
+          variant: "success",
+          shouldShowTimeoutProgress: true,
+        });
       });
     } catch (error) {
+      console.error("Error creating interview:", error);
+      setApiError(error instanceof Error ? error.message : "Failed to create interview");
+      
       addToastHandler({
-        title: "Error while creating interview. Please try again.",
-        description: "",
+        title: "Error creating interview",
+        description: "Please try again or check your connection",
+        color: "error",
+        timeout: 4000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleCopyLink = async () => {
+    if (!interviewId) {
+      addToastHandler({
+        title: "No interview link available",
+        description: "Please wait for the interview to be created",
+        color: "warning",
+        timeout: 3000,
+        variant: "warning",
+        shouldShowTimeoutProgress: true,
+      });
+      return;
+    }
+
+    try {
+      const link = `https://ai-recruiter-mauve.vercel.app/interview-details/${interviewId}`;
+      await navigator.clipboard.writeText(link);
+      
+      addToastHandler({
+        title: "Link copied to clipboard!",
+        description: "You can now share this link with candidates",
+        color: "success",
+        timeout: 2000,
+        variant: "success",
+        shouldShowTimeoutProgress: true,
+      });
+    } catch (error) {
+      console.error("Error copying link:", error);
+      addToastHandler({
+        title: "Failed to copy link",
+        description: "Please copy the link manually",
         color: "error",
         timeout: 3000,
         variant: "error",
@@ -188,21 +361,39 @@ const CreateInterviewMainAccordion = () => {
     }
   };
 
+  // Check if form is valid for generation
+  const isFormValid = () => {
+    return interviewDetails?.profile?.trim() &&
+           interviewDetails?.duration?.trim() &&
+           interviewDetails?.description?.trim() &&
+           interviewDetails?.noOfQuestions?.trim() &&
+           interviewDetails?.level?.trim() &&
+           interviewDetails?.types?.length > 0 &&
+           interviewDetails?.start_date &&
+           interviewDetails?.start_time &&
+           interviewDetails?.expiry_date &&
+           interviewDetails?.expiry_time;
+  };
+
   return (
     <Accordion
       variant="bordered"
       className="border border-white rounded-lg text-white"
       selectedKeys={selectedKeys}
       onSelectionChange={(keys) => {
-        // Only allow opening accordions based on current stage
-        const keyArray = Array.from(keys as Set<string>);
-        if (keyArray.length > 0) {
-          const lastKey = keyArray[keyArray.length - 1];
-          if (interviewStage >= parseInt(lastKey)) {
-            setSelectedKeys(keys as Set<string>);
+        try {
+          // Only allow opening accordions based on current stage
+          const keyArray = Array.from(keys as Set<string>);
+          if (keyArray.length > 0) {
+            const lastKey = keyArray[keyArray.length - 1];
+            if (interviewStage >= parseInt(lastKey)) {
+              setSelectedKeys(keys as Set<string>);
+            }
+          } else {
+            setSelectedKeys(new Set());
           }
-        } else {
-          setSelectedKeys(new Set());
+        } catch (error) {
+          console.error("Error handling accordion selection:", error);
         }
       }}
     >
@@ -234,8 +425,10 @@ const CreateInterviewMainAccordion = () => {
                   input: "text-white",
                 }}
                 name="profile"
-                value={interviewDetails?.profile}
+                value={interviewDetails?.profile || ""}
                 onChange={handleChange}
+                isInvalid={!!validationErrors.profile}
+                errorMessage={validationErrors.profile}
               />
             </div>
             <div className="flex-1">
@@ -251,8 +444,10 @@ const CreateInterviewMainAccordion = () => {
                   input: "text-white",
                 }}
                 name="duration"
-                value={interviewDetails?.duration}
+                value={interviewDetails?.duration || ""}
                 onChange={handleChange}
+                isInvalid={!!validationErrors.duration}
+                errorMessage={validationErrors.duration}
               />
             </div>
           </div>
@@ -268,8 +463,10 @@ const CreateInterviewMainAccordion = () => {
                 input: "text-white",
               }}
               name="description"
-              value={interviewDetails.description}
+              value={interviewDetails?.description || ""}
               onChange={handleChange}
+              isInvalid={!!validationErrors.description}
+              errorMessage={validationErrors.description}
             />
           </div>
 
@@ -285,8 +482,10 @@ const CreateInterviewMainAccordion = () => {
                 }}
                 type="number"
                 name="noOfQuestions"
-                value={interviewDetails?.noOfQuestions}
+                value={interviewDetails?.noOfQuestions || ""}
                 onChange={handleChange}
+                isInvalid={!!validationErrors.noOfQuestions}
+                errorMessage={validationErrors.noOfQuestions}
               />
             </div>
             <div className="flex-1">
@@ -295,9 +494,11 @@ const CreateInterviewMainAccordion = () => {
                 variant="bordered"
                 fullWidth
                 name="level"
-                value={interviewDetails?.level}
+                value={interviewDetails?.level || ""}
                 onChange={handleChange}
                 className="max-w-xs"
+                isInvalid={!!validationErrors.level}
+                errorMessage={validationErrors.level}
               >
                 {[
                   { key: "easy", label: "Easy" },
@@ -321,16 +522,30 @@ const CreateInterviewMainAccordion = () => {
                 { type: "Mixed", icon: <FaLayerGroup /> },
               ].map(({ type, icon }) => (
                 <div
+                  key={type}
                   onClick={() => {
-                    setInterviewDetails((prev) => {
-                      const types = prev.types.includes(type)
-                        ? prev.types.filter((t) => t !== type)
-                        : [...prev.types, type];
-                      return { ...prev, types };
-                    });
+                    try {
+                      setInterviewDetails((prev) => {
+                        const types = prev.types?.includes(type)
+                          ? prev.types.filter((t) => t !== type)
+                          : [...(prev.types || []), type];
+                        return { ...prev, types };
+                      });
+                      
+                      // Clear validation error for types
+                      if (validationErrors.types) {
+                        setValidationErrors(prev => {
+                          const newErrors = { ...prev };
+                          delete newErrors.types;
+                          return newErrors;
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Error updating interview types:", error);
+                    }
                   }}
                   className={`px-3 py-2 border rounded-full flex items-center gap-2 cursor-pointer transition duration-200 ease-in-out ${
-                    interviewDetails.types.includes(type)
+                    interviewDetails.types?.includes(type)
                       ? "bg-white text-black border-white"
                       : "bg-transparent text-white border-white hover:bg-white/10"
                   }`}
@@ -340,6 +555,9 @@ const CreateInterviewMainAccordion = () => {
                 </div>
               ))}
             </div>
+            {validationErrors.types && (
+              <p className="text-red-400 text-sm mt-1">{validationErrors.types}</p>
+            )}
           </div>
 
           {/* Date and Time Range */}
@@ -347,56 +565,116 @@ const CreateInterviewMainAccordion = () => {
             <div className="flex-1">
               <p className="font-medium mb-1">Interview Start</p>
               <DatePicker
-                // placeholder="Start Date"
                 variant="bordered"
-                // classNames={{ trigger: "text-white" }}
                 name="start_date"
-                value={interviewDetails?.start_date}
-                onChange={(date) =>
-                  setInterviewDetails((prev) => ({ ...prev, start_date: date }))
-                }
+                value={interviewDetails?.start_date || null}
+                onChange={(date) => {
+                  try {
+                    setInterviewDetails((prev) => ({ ...prev, start_date: date }));
+                    if (validationErrors.start_date) {
+                      setValidationErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.start_date;
+                        return newErrors;
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error updating start date:", error);
+                  }
+                }}
               />
+              {validationErrors.start_date && (
+                <p className="text-red-400 text-sm mt-1">{validationErrors.start_date}</p>
+              )}
               <TimeInput
                 label="Start Time"
                 variant="bordered"
-                // classNames={{ trigger: "text-white" }}
-                value={interviewDetails?.start_time}
-                onChange={(time) =>
-                  setInterviewDetails((prev) => ({ ...prev, start_time: time }))
-                }
+                value={interviewDetails?.start_time || null}
+                onChange={(time) => {
+                  try {
+                    setInterviewDetails((prev) => ({ ...prev, start_time: time }));
+                    if (validationErrors.start_time) {
+                      setValidationErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.start_time;
+                        return newErrors;
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error updating start time:", error);
+                  }
+                }}
                 className="mt-2"
               />
+              {validationErrors.start_time && (
+                <p className="text-red-400 text-sm mt-1">{validationErrors.start_time}</p>
+              )}
             </div>
             <div className="flex-1">
               <p className="font-medium mb-1">Interview Expiry</p>
               <DatePicker
-                // placeholder="Start Date"
                 variant="bordered"
-                // classNames={{ trigger: "text-white" }}
                 name="expiry_date"
-                value={interviewDetails?.expiry_date}
-                onChange={(date) =>
-                  setInterviewDetails((prev) => ({
-                    ...prev,
-                    expiry_date: date,
-                  }))
-                }
+                value={interviewDetails?.expiry_date || null}
+                onChange={(date) => {
+                  try {
+                    setInterviewDetails((prev) => ({
+                      ...prev,
+                      expiry_date: date,
+                    }));
+                    if (validationErrors.expiry_date) {
+                      setValidationErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.expiry_date;
+                        return newErrors;
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error updating expiry date:", error);
+                  }
+                }}
               />
+              {validationErrors.expiry_date && (
+                <p className="text-red-400 text-sm mt-1">{validationErrors.expiry_date}</p>
+              )}
               <TimeInput
-                label="Start Time"
+                label="Expiry Time"
                 variant="bordered"
-                // classNames={{ trigger: "text-white" }}
-                value={interviewDetails?.expiry_time}
-                onChange={(time) =>
-                  setInterviewDetails((prev) => ({
-                    ...prev,
-                    expiry_time: time,
-                  }))
-                }
+                value={interviewDetails?.expiry_time || null}
+                onChange={(time) => {
+                  try {
+                    setInterviewDetails((prev) => ({
+                      ...prev,
+                      expiry_time: time,
+                    }));
+                    if (validationErrors.expiry_time) {
+                      setValidationErrors(prev => {
+                        const newErrors = { ...prev };
+                        delete newErrors.expiry_time;
+                        return newErrors;
+                      });
+                    }
+                  } catch (error) {
+                    console.error("Error updating expiry time:", error);
+                  }
+                }}
                 className="mt-2"
               />
+              {validationErrors.expiry_time && (
+                <p className="text-red-400 text-sm mt-1">{validationErrors.expiry_time}</p>
+              )}
             </div>
           </div>
+
+          {/* API Error Display */}
+          {apiError && (
+            <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-4">
+              <p className="text-red-400 text-sm">
+                <strong>Error:</strong> {apiError}
+              </p>
+            </div>
+          )}
+
           {flagGeneratingQuestions ? (
             <div className="flex px-10 py-6 bg-blue-300/10 rounded-lg border border-blue-500 gap-4 items-center w-[70%] mx-auto">
               <div>
@@ -416,11 +694,7 @@ const CreateInterviewMainAccordion = () => {
                 color="primary"
                 className="mt-4 w-[200px]"
                 onClick={handleGenerateQuestions}
-                isDisabled={Object.entries(interviewDetails).some(
-                  ([key, value]) =>
-                    !["id", "userId", "createdAt"].includes(key) &&
-                    (!value || (Array.isArray(value) && value.length === 0))
-                )}
+                isDisabled={!isFormValid()}
               >
                 Generate
               </Button>
@@ -451,33 +725,45 @@ const CreateInterviewMainAccordion = () => {
             regenerate, or create an interview link.
           </p>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            {generateQuestions &&
-              generateQuestions?.length > 0 &&
-              generateQuestions?.map((question, index) => (
+          {generateQuestions && generateQuestions.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {generateQuestions.map((question, index) => (
                 <div
                   key={index}
-                  className=" p-5 rounded-xl border border-zinc-600 shadow-lg hover:shadow-xl transition duration-300"
+                  className="p-5 rounded-xl border border-zinc-600 shadow-lg hover:shadow-xl transition duration-300"
                 >
                   <p className="text-sm text-zinc-400 mb-1">
                     Question {index + 1}
                   </p>
                   <p className="text-white font-medium leading-relaxed">
-                    {question?.question}
+                    {question?.question || "Question not available"}
                   </p>
                   <p className="text-sm text-blue-500">
-                    Type: {question?.type}
+                    Type: {question?.type || "Not specified"}
                   </p>
                 </div>
               ))}
-          </div>
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <p className="text-zinc-400">No questions generated yet</p>
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row justify-end gap-4 mt-6">
             <Button
               variant="bordered"
               className="text-white border-white hover:bg-white hover:text-black transition-all"
               startContent={<MdReplay />}
-              onClick={() => console.log("Regenerate Questions")}
+              onClick={() => {
+                try {
+                  setInterviewStage(1);
+                  setSelectedKeys(new Set(["1"]));
+                  setGenerateQuestions([]);
+                } catch (error) {
+                  console.error("Error resetting to first stage:", error);
+                }
+              }}
             >
               Regenerate Questions
             </Button>
@@ -486,12 +772,25 @@ const CreateInterviewMainAccordion = () => {
               className="text-white font-semibold"
               startContent={<MdLink />}
               onPress={() => {
+                if (!user?.uid) {
+                  addToastHandler({
+                    title: "Authentication Error",
+                    description: "Please log in again",
+                    color: "error",
+                    timeout: 3000,
+                    variant: "error",
+                    shouldShowTimeoutProgress: true,
+                  });
+                  return;
+                }
                 handleAddNewInterview(
                   interviewDetails,
                   generateQuestions,
-                  user?.uid
+                  user.uid
                 );
               }}
+              isLoading={isSubmitting}
+              isDisabled={!generateQuestions || generateQuestions.length === 0}
             >
               Create Interview Link
             </Button>
@@ -543,11 +842,7 @@ const CreateInterviewMainAccordion = () => {
                 variant="light"
                 className="text-white"
                 isDisabled={!interviewId}
-                onClick={() =>
-                  navigator.clipboard.writeText(
-                    `https://ai-recruiter-mauve.vercel.app/interview-details/${interviewId}`
-                  )
-                }
+                onClick={handleCopyLink}
               >
                 <MdContentCopy />
               </Button>
@@ -556,26 +851,28 @@ const CreateInterviewMainAccordion = () => {
 
           <div className="flex flex-wrap gap-4 text-white text-sm sm:text-base">
             <div className="flex items-center gap-2">
-              {/* <MdAccessTime className="text-primary text-lg" /> */}
               <p className="text-sm bg-[#111111] p-2 rounded-md">
                 Duration{" "}
                 <span className="border-l-1 pl-1">
-                  {interviewDetails?.duration} mins
+                  {interviewDetails?.duration || "Not set"} mins
                 </span>
               </p>
             </div>
             <div className="flex items-center gap-2">
-              {/* <MdCalendarToday className="text-primary" /> */}
               <p className="text-sm bg-[#111111] p-2 rounded-md">
                 Expiry:{" "}
-                <span className="border-l-1 pl-1">25 Apr 2025, 11:59 PM</span>
+                <span className="border-l-1 pl-1">
+                  {interviewDetails?.expiry_date && interviewDetails?.expiry_time 
+                    ? `${formatCalendarDateToDDMMYYYY(interviewDetails.expiry_date)}, ${formatCalendarTime(interviewDetails.expiry_time)}`
+                    : "Not set"}
+                </span>
               </p>
             </div>
             <div className="flex items-center gap-2">
               <p className="text-sm bg-[#111111] p-2 rounded-md">
                 Questions:{" "}
                 <span className="border-l-1 pl-1">
-                  {interviewDetails?.noOfQuestions}
+                  {interviewDetails?.noOfQuestions || "Not set"}
                 </span>
               </p>
             </div>
@@ -583,7 +880,7 @@ const CreateInterviewMainAccordion = () => {
               <p className="text-sm bg-[#111111] p-2 rounded-md">
                 Type:{" "}
                 <span className="border-l-1 pl-1">
-                  {interviewDetails?.types?.join(",")}
+                  {interviewDetails?.types?.join(", ") || "Not set"}
                 </span>
               </p>
             </div>
@@ -597,15 +894,17 @@ const CreateInterviewMainAccordion = () => {
               startContent={<MdDashboard />}
               className="text-white font-semibold"
               onPress={() => {
-                router.push("/dashboard");
+                try {
+                  router.push("/dashboard");
+                } catch (error) {
+                  console.error("Error navigating to dashboard:", error);
+                  window.location.href = "/dashboard";
+                }
               }}
-              onClick={() => console.log("Navigate to dashboard")}
             >
               Back to Dashboard
             </Button>
           </div>
-
-          {/* ... rest of your summary content ... */}
         </div>
       </AccordionItem>
     </Accordion>

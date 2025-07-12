@@ -82,7 +82,7 @@ const Home = () => {
         </p>
 
         {/* Steps */}
-        <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl">
+        <div className="my-16 grid grid-cols-1 md:grid-cols-4 gap-8 max-w-6xl">
           {/* Step 1 */}
           <div className="flex flex-col items-center bg-gradient-to-br from-[#111111] to-[#000000] p-6 rounded-lg shadow-lg border border-[#575757]">
             <div className="bg-indigo-100 p-4 rounded-full mb-4">
@@ -141,3 +141,22 @@ const Home = () => {
 };
 
 export default Home;
+
+
+// ask-openai
+// hooks/useAuth.ts
+// interview-options
+// interviewpage
+// QuestionPlayer.tsx
+// chat.ts
+
+
+// Remaining work
+// Minor UI changes
+// Email verification for signup
+// OAuth
+// Credits system
+// Stripe integration
+// Interview details page for mcq interviews
+// MCQ interview page
+// Interview result page

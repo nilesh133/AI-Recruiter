@@ -13,6 +13,7 @@ import { Spinner } from "@heroui/react";
 import {Select, SelectItem} from "@heroui/react";
 import {Button} from '@heroui/button';
 import { TbSortDescending2 } from "react-icons/tb";
+import { HiOutlineKey } from "react-icons/hi";
 
 export default function Signup() {
   const [form, setForm] = useState<AppUser>({
@@ -21,6 +22,10 @@ export default function Signup() {
     password: "",
     role: "",
   });
+  const [verificationCode, setVerificationCode] = useState("");
+  const [showVerificationCode, setShowVerificationCode] = useState(false);
+  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
   const { signup, error } = useAuth();
   const router = useRouter();
   const [loader, setLoader] = useState(false);
@@ -32,54 +37,140 @@ export default function Signup() {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoader(true);
+  const handleSendVerification = async () => {
+    if (!form.email) {
+      addToastHandler({
+        title: "Please enter your email",
+        description: "We'll send you a verification code to your email.",
+        color: "warning",
+        timeout: 3000,
+        variant: "warning",
+        shouldShowTimeoutProgress: true,
+      });
+      return;
+    }
 
+    setIsVerifying(true);
     try {
-      await signup(
-        { name: form.name, email: form.email, role: form.role },
-        form.password,
-        () => {
-          addToastHandler({
-            title: "Account created successfully!",
-            description: "",
-            color: "success",
-            timeout: 3000,
-            variant: "success",
-            shouldShowTimeoutProgress: true,
-          });
-          router.push("/login");
-        }
-      );
-    } catch (error: any) {
-      if (error.message === "email-exists") {
+      const response = await fetch('/api/send-verification', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setIsEmailSent(true);
+        setShowVerificationCode(true);
         addToastHandler({
-          title: "Email already exists",
-          description: "Try logging in or use a different email.",
-          color: "warning",
+          title: "Verification email sent!",
+          description: "Please check your email for the 6-digit code.",
+          color: "success",
           timeout: 3000,
-          variant: "warning",
+          variant: "success",
           shouldShowTimeoutProgress: true,
         });
       } else {
         addToastHandler({
-          title: "Signup Failed",
-          description: "Something went wrong. Please try again.",
+          title: "Failed to send verification email",
+          description: data.error || "Please try again.",
           color: "error",
           timeout: 3000,
           variant: "error",
           shouldShowTimeoutProgress: true,
         });
       }
+    } catch (error) {
+      addToastHandler({
+        title: "Error",
+        description: "Failed to send verification email. Please try again.",
+        color: "error",
+        timeout: 3000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleVerifyCode = async () => {
+    if (!verificationCode || verificationCode.length !== 6) {
+      addToastHandler({
+        title: "Invalid code",
+        description: "Please enter a valid 6-digit verification code.",
+        color: "warning",
+        timeout: 3000,
+        variant: "warning",
+        shouldShowTimeoutProgress: true,
+      });
+      return;
+    }
+
+    setLoader(true);
+    try {
+      const response = await fetch('/api/verify-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: form.email,
+          code: verificationCode,
+          password: form.password,
+          role: form.role,
+          name: form.name,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        addToastHandler({
+          title: "Account created successfully!",
+          description: "Your email has been verified and account is ready.",
+          color: "success",
+          timeout: 3000,
+          variant: "success",
+          shouldShowTimeoutProgress: true,
+        });
+        router.push("/login");
+      } else {
+        addToastHandler({
+          title: "Verification failed",
+          description: data.error || "Please check your code and try again.",
+          color: "error",
+          timeout: 3000,
+          variant: "error",
+          shouldShowTimeoutProgress: true,
+        });
+      }
+    } catch (error) {
+      addToastHandler({
+        title: "Error",
+        description: "Something went wrong. Please try again.",
+        color: "error",
+        timeout: 3000,
+        variant: "error",
+        shouldShowTimeoutProgress: true,
+      });
     } finally {
       setLoader(false);
     }
   };
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    // This will now trigger email verification instead of direct signup
+    handleSendVerification();
+  };
+
   return (
     <div className="min-h-screen h-screen flex font-bricolage_grotesque">
-      <div className="w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 flex flex-col justify-end gap-4">
+      <div className="hidden md:block w-[50%] h-full bg-gradient-to-tr from-purple-500 to-indigo-500 p-8 !flex flex-col justify-end gap-4">
         {/* <div className="flex gap-2 items-center">
           <span className="w-[40px] h-[40px] bg-white rounded-full flex items-center justify-center text-lg font-bold">
             A
@@ -90,7 +181,7 @@ export default function Signup() {
           <h1>Hire the Right Talent, Faster with AI</h1>
         </div>
       </div>
-      <div className="w-[50%] h-full bg-[#080808] flex items-center justify-center">
+      <div className="w-[100%] md:w-[50%] h-full bg-[#080808] flex items-center justify-center">
         <form
           onSubmit={handleSubmit}
           className="shadow-md rounded-xl p-8 max-w-md w-full space-y-6"
@@ -134,7 +225,47 @@ export default function Signup() {
                 required
               />
             </div>
+            {form.email && !showVerificationCode && (
+              <button
+                type="button"
+                onClick={handleSendVerification}
+                disabled={isVerifying}
+                className="text-sm text-indigo-400 hover:text-indigo-300 mt-1 flex items-center gap-1"
+              >
+                {isVerifying ? (
+                  <>
+                    <Spinner size="sm" />
+                    Sending verification email...
+                  </>
+                ) : (
+                  "Verify Email"
+                )}
+              </button>
+            )}
           </div>
+
+          {showVerificationCode && (
+            <div className="field_container">
+              <span className="field_container_label">Verification Code</span>
+              <div className="field_container_input">
+                <span>
+                  <HiOutlineKey className="field_container_icon" />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Enter 6-digit code"
+                  value={verificationCode}
+                  onChange={(e) => setVerificationCode(e.target.value)}
+                  maxLength={6}
+                  className=""
+                  required
+                />
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                Enter the 6-digit code sent to your email
+              </p>
+            </div>
+          )}
 
           <div className="field_container">
             <span className="field_container_label">Password</span>
@@ -161,7 +292,7 @@ export default function Signup() {
                 <TbSortDescending2 className="field_container_icon" />
               </span>
               <Select placeholder="Select Role" className="bg-transparent field_dropdown" onChange={handleChange} name="role" value={form.role}>
-                {[{'label': "User", "id": 1}, {'label': "Admin", "id": 2}].map((user) => (
+                {[{'label': "User", 'id': 1}, {'label': "Admin", 'id': 2}].map((user) => (
                   <SelectItem key={user.id}>{user.label}</SelectItem>
                 ))}
               </Select>
@@ -179,16 +310,15 @@ export default function Signup() {
           </div>
 
           <Button
-            type="submit"
+            type={showVerificationCode ? "button" : "submit"}
+            onClick={showVerificationCode ? handleVerifyCode : undefined}
             className="w-full mt-4 bg-indigo-500 text-white py-2 rounded-lg hover:bg-indigo-700 transition duration-500 text-sm relative overflow-hidden"
           >
             {loader ? (
               <Spinner size="md" variant="dots" className="spinner" />
             ) : (
-              <div
-              // type="submit"
-              >
-                Sign Up
+              <div>
+                {showVerificationCode ? "Verify & Create Account" : "Send Verification Email"}
               </div>
             )}
           </Button>

@@ -22,7 +22,7 @@ const CreateInterview = () => {
           </p>
         </div>
 
-        <div className="w-[70%] mx-auto py-10">
+        <div className="w-[90%] md:w-[70%] mx-auto py-10">
           <CreateInterviewMainAccordion />
         </div>
       </div>
