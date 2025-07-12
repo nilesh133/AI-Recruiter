@@ -67,6 +67,7 @@ const CreateMcqInterview = () => {
     level: "Easy",
     userId: user?.uid || "",
     createdAt: null,
+    questions: []
   });
   const [questions, setQuestions] = useState<MCQQuestion[]>([]);
 
