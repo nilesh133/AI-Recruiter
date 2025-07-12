@@ -5,7 +5,7 @@ import { Card, CardHeader, CardBody, Avatar, Button, Spinner } from "@heroui/rea
 import { useEffect, useRef, useState } from "react";
 import { db } from "@/lib/firebase";
 import { useAuthContext } from "@/context/AuthContext";
-import { InterviewDetails, Question } from "@/types/interview";
+import { InterviewDetails, MCQQuestion, Question } from "@/types/interview";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import Vapi from "@vapi-ai/web";
@@ -83,7 +83,7 @@ export default function OngoingInterviewPage({ interviewId, userid }: { intervie
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
-          const data = docSnap.data() as InterviewDetails;
+          const data = docSnap.data() as any;
           setQuestions(data.questions as Question[]);
           let durationSec = 1800;
           if (data.duration && !isNaN(Number(data.duration))) {
